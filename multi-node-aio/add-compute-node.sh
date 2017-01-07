@@ -85,3 +85,6 @@ openstack-ansible setup-hosts.yml --limit "${node%%':'*}"
 openstack-ansible setup-openstack.yml --skip-tags nova-key-distribute --limit "${node%%':'*}"
 openstack-ansible setup-openstack.yml --tags nova-key --limit compute_hosts
 openstack-ansible --tags=openstack-host-hostfile setup-hosts.yml
+
+#root@infra1-utility-container-807963ce:/var/log# openstack server create --image cirros --flavor m1.tiny 
+# --availability-zone nova::compute3.openstackci.local --nic net-id=a1437452-34fb-43cf-8c0a-cd1db1b40d32 test
