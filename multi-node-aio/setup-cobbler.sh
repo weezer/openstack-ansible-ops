@@ -59,6 +59,7 @@ cp -v templates/dhcp.template /etc/cobbler/dhcp.template
 
 # Create a trusty sources file
 cp -v templates/trusty-sources.list /var/www/html/trusty-sources.list
+cp -v templates/xenial-sources.list /var/www/html/trusty-sources.list
 
 # Set the default preseed device name.
 #  This is being set because sda is on hosts, vda is kvm, xvda is xen.
@@ -84,17 +85,17 @@ update-rc.d cobblerd defaults
 # Get ubuntu server image
 mkdir_check "/var/cache/iso"
 pushd /var/cache/iso
-  if [ -f "/var/cache/iso/ubuntu-14.04.4-server-amd64.iso" ]; then
-    rm /var/cache/iso/ubuntu-14.04.4-server-amd64.iso
+  if [ -f "/var/cache/iso/ubuntu-16.04.1-server-amd64.iso" ]; then
+    rm /var/cache/iso/ubuntu-16.04.1-server-amd64.iso
   fi
-  wget http://releases.ubuntu.com/trusty/ubuntu-14.04.4-server-amd64.iso
+  wget http://releases.ubuntu.com/16.04/ubuntu-16.04.1-server-amd64.iso
 popd
 
 # import cobbler image
-if ! cobbler distro list | grep -qw "ubuntu-14.04.4-server-x86_64"; then
+if ! cobbler distro list | grep -qw "ubuntu-16.04.1-server-x86_64"; then
   mkdir_check "/mnt/iso"
-  mount -o loop /var/cache/iso/ubuntu-14.04.4-server-amd64.iso /mnt/iso
-  cobbler import --name=ubuntu-14.04.4-server-amd64 --path=/mnt/iso
+  mount -o loop /var/cache/iso/ubuntu-16.04.1-server-amd64.iso /mnt/iso
+  cobbler import --name=ubuntu-16.04.1-server-amd64 --path=/mnt/iso
   umount /mnt/iso
 fi
 
@@ -103,7 +104,7 @@ for seed_file in /var/lib/cobbler/kickstarts/ubuntu*14.04*.seed; do
   if ! cobbler profile list | grep -qw "${seed_file##*'/'}"; then
     cobbler profile add \
       --name "${seed_file##*'/'}" \
-      --distro ubuntu-14.04.4-server-x86_64 \
+      --distro ubuntu-16.04.1-server-x86_64 \
       --kickstart "${seed_file}"
   fi
 done
@@ -127,7 +128,7 @@ for node_type in $(get_all_types); do
     echo "adding node ${node%%':'*} from the cobbler system"
     cobbler system add \
       --name="${node%%':'*}" \
-      --profile="ubuntu-server-14.04-unattended-cobbler-${node_type}.seed" \
+      --profile="ubuntu-server-16.04-unattended-cobbler-${node_type}.seed" \
       --hostname="${node%%":"*}.openstackci.local" \
       --kopts="interface=${DEFAULT_NETWORK}" \
       --interface="${DEFAULT_NETWORK}" \
