@@ -59,7 +59,7 @@ cp -v templates/dhcp.template /etc/cobbler/dhcp.template
 
 # Create a trusty sources file
 cp -v templates/trusty-sources.list /var/www/html/trusty-sources.list
-cp -v templates/xenial-sources.list /var/www/html/trusty-sources.list
+cp -v templates/xenial-sources.list /var/www/html/xenial-sources.list
 
 # Set the default preseed device name.
 #  This is being set because sda is on hosts, vda is kvm, xvda is xen.
