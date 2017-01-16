@@ -76,13 +76,14 @@ for seed_file in $(ls -1 templates/pre-seeds); do
   sed -i "s|__DEFAULT_NETWORK__|${DEFAULT_NETWORK}|g" "/var/lib/cobbler/kickstarts/${seed_file#*'/'}"
 done
 
-cobbler signature update
-
 # Restart services again and configure autostart
 service cobblerd restart
 service apache2 restart
 service xinetd restart
 update-rc.d cobblerd defaults
+
+# Update Cobbler Signatures
+cobbler signature update
 
 # Get ubuntu server image
 mkdir_check "/var/cache/iso"
@@ -117,8 +118,6 @@ cobbler sync
 # Get Loaders
 cobbler get-loaders
 
-# Update Cobbler Signatures
-cobbler signature update
 
 # Create cobbler systems
 for node_type in $(get_all_types); do
