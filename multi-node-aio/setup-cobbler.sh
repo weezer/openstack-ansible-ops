@@ -76,6 +76,8 @@ for seed_file in $(ls -1 templates/pre-seeds); do
   sed -i "s|__DEFAULT_NETWORK__|${DEFAULT_NETWORK}|g" "/var/lib/cobbler/kickstarts/${seed_file#*'/'}"
 done
 
+cobbler signature update
+
 # Restart services again and configure autostart
 service cobblerd restart
 service apache2 restart
@@ -100,7 +102,7 @@ if ! cobbler distro list | grep -qw "ubuntu-16.04.1-server-x86_64"; then
 fi
 
 # Create cobbler profile
-for seed_file in /var/lib/cobbler/kickstarts/ubuntu*14.04*.seed; do
+for seed_file in /var/lib/cobbler/kickstarts/ubuntu*16.04*.seed; do
   if ! cobbler profile list | grep -qw "${seed_file##*'/'}"; then
     cobbler profile add \
       --name "${seed_file##*'/'}" \
@@ -130,7 +132,7 @@ for node_type in $(get_all_types); do
       --name="${node%%':'*}" \
       --profile="ubuntu-server-16.04-unattended-cobbler-${node_type}.seed" \
       --hostname="${node%%":"*}.openstackci.local" \
-      --kopts="interface=${DEFAULT_NETWORK}" \
+      --kopts="interface=${DEFAULT_NETWORK} net.ifnames=0 biosdevname=0" \
       --interface="${DEFAULT_NETWORK}" \
       --mac="52:54:00:bd:81:${node:(-2)}" \
       --ip-address="10.0.0.${node#*":"}" \
@@ -140,6 +142,9 @@ for node_type in $(get_all_types); do
       --static=1
   done
 done
+
+# sync cobbler
+cobbler sync
 
 # Restart XinetD
 service xinetd stop

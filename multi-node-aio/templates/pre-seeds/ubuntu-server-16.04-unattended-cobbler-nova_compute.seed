@@ -1,5 +1,5 @@
 #
-# Ubuntu Server 14.04 Preseed
+# Ubuntu Server 16.04 Preseed
 #
 # Usage:
 #
@@ -8,7 +8,7 @@
 #
 # References:
 #
-# https://help.ubuntu.com/14.04/installation-guide/example-preseed.txt
+# https://help.ubuntu.com/16.04/installation-guide/example-preseed.txt
 # http://www.claudiokuenzler.com/blog/513/debian-ubuntu-preseed-create-two-volume-groups-same-disk
 
 #############
@@ -21,7 +21,7 @@
 # installed system (if supported by the bootloader installer).
 # Note: options passed to the installer will be added automatically.
 d-i debian-installer/add-kernel-opts string $kernel_options_post
-
+d-i debian-installer/add-kernel-opts string biosdevname=0 net.ifnames=0
 #############
 #
 # Networking
@@ -174,7 +174,15 @@ d-i partman-auto/expert_recipe string \
                       lv_name{ swap00 }                       \
                       method{ swap } format{ }                \
               .                                               \
-              153600 1 153600 ext4                            \
+              51200 1 51200 ext4                              \
+                      $lvmok{ } in_vg{ lxc }                  \
+                      lv_name{ root00 }                       \
+                      method{ format } format{ }              \
+                      use_filesystem{ } filesystem{ ext4 }    \
+                      label{ root }                           \
+                      mountpoint{ / }                         \
+              .                                               \
+              76800 1 76800 ext4                              \
                       $lvmok{ } in_vg{ lxc }                  \
                       lv_name{ openstack00 }                  \
                       method{ format } format{ }              \
@@ -184,11 +192,11 @@ d-i partman-auto/expert_recipe string \
               .                                               \
               1024 1 1000000000 ext4                          \
                       $lvmok{ } in_vg{ lxc }                  \
-                      lv_name{ root00 }                       \
+                      lv_name{ nova00 }                       \
                       method{ format } format{ }              \
                       use_filesystem{ } filesystem{ ext4 }    \
-                      label{ root }                           \
-                      mountpoint{ / }                         \
+                      label{ nova }                           \
+                      mountpoint{ /var/lib/nova }             \
               .                                               \
 
 # This makes partman automatically partition without confirmation, provided
@@ -264,7 +272,7 @@ d-i grub-installer/only_debian boolean true
 # Command Line 2: Cobbler overwrites sources.list with its own repos. Put the default Ubuntu sources.list back.
 # Command Line 3: Cobbler API call to turn off netboot.
 d-i preseed/late_command string \
-  wget http://$http_server/trusty-sources.list -O /target/etc/apt/sources.list; \
+  wget http://$http_server/xenial-sources.list -O /target/etc/apt/sources.list; \
   wget http://$http_server/osa-$hostname-bridges.cfg -O /target/etc/network/interfaces.d/osa-$hostname-bridges.cfg; \
   wget http://$http_server/cblr/svc/op/nopxe/system/$system_name -O /dev/null; \
   sed -i '/PermitRootLogin / s/ .*/ yes/' /target/etc/ssh/sshd_config; \
