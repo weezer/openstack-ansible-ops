@@ -1,5 +1,6 @@
 import os
 import argparse
+from subprocess import call
 
 NODES = {
     "Compute":{
@@ -25,14 +26,24 @@ NODES = {
 def add_nodes(**kwargs):
     for i in kwargs:
         os.environ[i] = kwargs[i]
+    if os.environ["ADD_NODE"] == "Compute":
+        for _ in NODES['Compute']:
+            os.environ[_] = NODES['Compute'][_]
+    else:
+        for _ in NODES['Infra']:
+            os.environ[_] = NODES['Infra'][_]
 
+    call("source cobbler-setup.sh", shell=True)
+    call("source vm-setup.sh", shell=True)
+    call("source os-feature-setup.sh", shell=True)
 
 
 def args():
     """Setup argument Parsing."""
     parser = argparse.ArgumentParser(
-        usage='%(prog)s',
-        description='Add Node Capaity Testing'
+        usage="%(prog)s -a Compute/Infra",
+        description='Add Node Capaity Testing',
+        epilog="Need the Node type, 'Compute' or 'Infra'."
     )
 
     parser.add_argument(
@@ -51,13 +62,19 @@ def args():
         default='eth0'
     )
 
-
     parser.add_argument(
         '-i',
         '--DEVICE_NAME',
         help='the disk device name',
         required=False,
         default='vda'
+    )
+
+    parser.add_argument(
+        '-a',
+        '--ADD_NODE',
+        help='Compute for Nova, Infra for Infra',
+        required=True
     )
 
     return vars(parser.parse_args())

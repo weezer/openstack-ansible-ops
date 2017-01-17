@@ -14,11 +14,11 @@ set -eu
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "  ${node%%':'*}:" >> ${CONFD_FILE}
-echo "    ip: 172.29.236.${node#*":"}" >> ${CONFD_FILE}
+echo "  ${node}:" >> ${CONFD_FILE}
+echo "    ip: 172.29.236.${seq}" >> ${CONFD_FILE}
 /opt/openstack-ansible/playbooks/inventory/dynamic_inventory.py > /dev/null
 cd /opt/openstack-ansible/playbooks
-openstack-ansible setup-hosts.yml --limit "${node%%':'*}"
-openstack-ansible setup-openstack.yml --skip-tags nova-key-distribute --limit "${node%%':'*}"
+openstack-ansible setup-hosts.yml --limit "${node}"
+openstack-ansible setup-openstack.yml --skip-tags nova-key-distribute --limit "${node}"
 openstack-ansible setup-openstack.yml --tags nova-key --limit compute_hosts
 openstack-ansible --tags=openstack-host-hostfile setup-hosts.yml

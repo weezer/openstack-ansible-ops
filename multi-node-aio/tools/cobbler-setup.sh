@@ -15,13 +15,13 @@ set -eu
 # limitations under the License.
 
 cobbler system add \
-  --name="${node%%':'*}" \
+  --name="${node}" \
   --profile="ubuntu-server-14.04-unattended-cobbler-${node_type}.seed" \
-  --hostname="${node%%":"*}.openstackci.local" \
+  --hostname="${node}.openstackci.local" \
   --kopts="interface=${DEFAULT_NETWORK}" \
   --interface="${DEFAULT_NETWORK}" \
-  --mac="52:54:00:bd:81:${node:(-2)}" \
-  --ip-address="10.0.0.${node#*":"}" \
+  --mac="52:54:00:bd:81:${seq:(-2)}" \
+  --ip-address="10.0.0.${seq}" \
   --subnet=255.255.255.0 \
   --gateway=10.0.0.200 \
   --name-servers=8.8.8.8 8.8.4.4 \
