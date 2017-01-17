@@ -14,8 +14,6 @@ set -eu
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-
 VM_DISK_SIZE="${VM_DISK_SIZE:-252}"
 DEFAULT_NETWORK="${DEFAULT_NETWORK:-eth0}"
 DEVICE_NAME="${DEVICE_NAME:-vda}"
