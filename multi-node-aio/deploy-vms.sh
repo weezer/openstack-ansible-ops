@@ -69,7 +69,7 @@ for node in $(get_all_hosts); do
     fi
   done
   if [[ "14.04" != "${RELEASE_VERSION:0:5}" ]]; then
-    ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "mv /tmp/sources.list /etc/apt/sources.list"
+    ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "mv /tmp/sources.list.j2 /etc/apt/sources.list.j2"
   fi
   ssh -q -n -f -o StrictHostKeyChecking=no 10.0.0.${node#*":"} "(for i in /tmp/keys/*; do \
       apt-key add \$i; \

@@ -1,0 +1,108 @@
+---
+- hosts: all
+
+  vars_files:
+    - vars.yml
+
+#  pre_tasks:
+#    - name: Update apt cache if needed.
+#      apt: update_cache=yes cache_valid_time=3600
+#
+#  handlers:
+#    - name: restart solr
+#      service: name=solr state=restarted
+
+  tasks:
+    - name: Generate ssh key if not exist
+      user:
+        name: root
+        generate_ssh_key: yes
+        ssh_key_type: rsa
+        ssh_key_file: /root/.ssh/id_rsa
+
+    - name: Set authorized key took from file
+      authorized_key:
+        user: root
+        state: absent
+        key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+
+    - name: Install basic packages known to be needed
+      apt:
+        name: bridge-utils ifenslave libvirt-bin lvm2 openssh-server python2.7 qemu-kvm vim virtinst virt-manager vlan
+        update_cache: yes
+
+    - name: include interfaces.d files
+      lineinfile:
+        path: /etc/network/interfaces
+        regexp: '^source.*cfg$'
+        line: 'source /etc/network/interfaces.d/*.cfg'
+
+    - name: set kvm bridge network address
+      template:
+        src: tmplates/kvm-bonded-bridges.cfg.j2
+        dest: /etc/network/interfaces.d/kvm-bridges.cfg
+
+    - name: bringup all kvm interfaces
+      shell: >
+        for i in $(awk '/iface/ {print $2}' /etc/network/interfaces.d/kvm-bridges.cfg); do
+          ifup $i
+        done
+
+    - name: Clean up stale NTP processes.
+      shell: >
+        pkill lockfile-create || true
+
+    - name: Set the forward rule
+      lineinfile:
+        path: /etc/sysctl.conf
+        regexp: '^net.ipv4.ip_forward'
+        line: 'sysctl -w net.ipv4.ip_forward=1'
+
+    - name: Set up default filter iptables
+      iptables_raw:
+        name: default_filter_rules
+        rules: |
+          INPUT -i br-dhcp -p udp --dport 67 -j ACCEPT
+          INPUT -i br-dhcp -p tcp --dport 67 -j ACCEPT
+          INPUT -i br-dhcp -p udp --dport 53 -j ACCEPT
+          INPUT -i br-dhcp -p tcp --dport 53 -j ACCEPT
+          FORWARD -i br-dhcp -j ACCEPT
+          FORWARD -o br-dhcp -j ACCEPT
+
+    - name: Set up nat iptables
+      iptables_raw:
+        name: nat_rules
+        table: nat
+        rules: |
+          POSTROUTING -s 10.0.0.0/24 ! -d 10.0.0.0/24 -j MASQUERADE
+          POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
+
+
+    - name: Set up default fileter iptables
+      iptables_raw:
+        name: default_rules
+        table: mangle
+        rules: |
+          POSTROUTING -s 10.0.0.0/24 -o br-dhcp -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill
+          POSTROUTING -p tcp -j CHECKSUM --checksum-fill
+
+    - name: Override the sources.list
+      copy:
+        src: tmplates/sources.list.j2
+        dest: /etc/apt/sources.list
+        owner: root
+        group: root
+        mode: 0644
+      when:
+        - override_sources
+        - ubuntu_release == "trusty"
+
+    - name: Allow apt repos to be UnAuthenticated
+      copy:
+        content: ""
+        dest: /etc/apt/apt.conf.d/00-nokey
+        force: yes
+        group: root
+        owner: root
+        mode: 0644
+

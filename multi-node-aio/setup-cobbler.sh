@@ -74,7 +74,7 @@ chown www-data /var/lib/cobbler/webui_sessions
 cp -v templates/dhcp.template /etc/cobbler/dhcp.template
 sed -i "s|__DNS_NAMESERVER__|${DNS_NAMESERVER}|g" /etc/cobbler/dhcp.template
 
-# Create a sources.list file
+# Create a sources.list.j2 file
 if [[ $DEFAULT_IMAGE == "14.04."* ]]; then
   cp -v templates/trusty-sources.list /var/www/html/trusty-sources.list
 else

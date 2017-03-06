@@ -1,0 +1,48 @@
+---
+# Variables used by multi-node-aio
+# Network subnet used for all the virtual machines
+network_base: 172.29
+# DNS used throughout the deploy
+#DNS_NAMESERVER: $(cat /etc/resolv.conf | grep -m 1 "nameserver" | sed "s/nameserver //")
+dns_nameserver: 8.8.8.8
+
+# By default AIO deploy overrides apt-sources, if things like a local mirror are already
+# set up then this script will override these. This option allows for the override to be
+# disabled.
+override_sources: true
+
+#the Ubuntu release VMs will use
+ubuntu_release: trusty
+
+# What branch of Openstack-Ansible are we deploying from
+osa_branch: master
+
+# What is the default disk device name
+device_name: vda
+
+# What default network device should we use for Cobbler
+default_network: eth0
+
+# What is the default virtual machine disk size in GB
+vm_disk_size: 252
+
+# Do we want to do all the required host setup
+setup_host: true
+
+# Do we want to do disk partitioning or is there a partition ready to use
+partition_host: true
+
+# Do we want to set up networking on the host for Virsh
+setup_virsh_net: true
+
+# When the virtual machines are re-kicked do we format them
+vm_image_create: true
+
+# Should we run the deploy Openstack-Ansible script at the end of the build script
+deploy_osa: true
+
+# Should we pre-configure the environment before we deploy OpenStack-Ansible
+pre_config_osa: true
+
+# should we run the final deploy of OpenStack-Ansible
+run_osa: true
