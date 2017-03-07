@@ -28,8 +28,21 @@
 
     - name: Install basic packages known to be needed
       apt:
-        name: bridge-utils ifenslave libvirt-bin lvm2 openssh-server python2.7 qemu-kvm vim virtinst virt-manager vlan
+        name: "{{ item }}"
         update_cache: yes
+        state:
+      with_items:
+        - bridge-utils
+        - ifenslave
+        - libvirt-bin
+        - lvm2
+        - openssh-server
+        - python2.7
+        - qemu-kvm
+        - vim
+        - virtinst
+        - virt-manager
+        - vlan
 
     - name: include interfaces.d files
       lineinfile:
@@ -99,7 +112,7 @@
 
     - name: Allow apt repos to be UnAuthenticated
       copy:
-        content: ""
+        content: 'APT { Get { AllowUnauthenticated "1"; }; };'
         dest: /etc/apt/apt.conf.d/00-nokey
         force: yes
         group: root
