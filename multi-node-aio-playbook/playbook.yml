@@ -30,7 +30,7 @@
       apt:
         name: "{{ item }}"
         update_cache: yes
-        state:
+        state: latest
       with_items:
         - bridge-utils
         - ifenslave
