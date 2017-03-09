@@ -4,14 +4,6 @@
   vars_files:
     - vars.yml
 
-#  pre_tasks:
-#    - name: Update apt cache if needed.
-#      apt: update_cache=yes cache_valid_time=3600
-#
-#  handlers:
-#    - name: restart solr
-#      service: name=solr state=restarted
-
   tasks:
     - name: Generate ssh key if not exist
       user:
