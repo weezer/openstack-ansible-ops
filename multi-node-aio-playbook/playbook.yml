@@ -67,37 +67,26 @@
 
     - name: Set the forward rule
       lineinfile:
-        path: /etc/sysctl.conf
+        dest: /etc/sysctl.conf
         regexp: '^net.ipv4.ip_forward'
         line: 'sysctl -w net.ipv4.ip_forward=1'
 
     - name: Set up default filter iptables
       iptables_raw:
         name: default_filter_rules
-        rules: |
-          INPUT -i br-dhcp -p udp --dport 67 -j ACCEPT
-          INPUT -i br-dhcp -p tcp --dport 67 -j ACCEPT
-          INPUT -i br-dhcp -p udp --dport 53 -j ACCEPT
-          INPUT -i br-dhcp -p tcp --dport 53 -j ACCEPT
-          FORWARD -i br-dhcp -j ACCEPT
-          FORWARD -o br-dhcp -j ACCEPT
+        rules: "{{ default_filter_rules }}"
 
     - name: Set up nat iptables
       iptables_raw:
         name: nat_rules
         table: nat
-        rules: |
-          POSTROUTING -s 10.0.0.0/24 ! -d 10.0.0.0/24 -j MASQUERADE
-          POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
-
+        rules: "{{ nat_rules }}"
 
     - name: Set up default fileter iptables
       iptables_raw:
-        name: default_rules
+        name: mangle_rules
         table: mangle
-        rules: |
-          POSTROUTING -s 10.0.0.0/24 -o br-dhcp -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill
-          POSTROUTING -p tcp -j CHECKSUM --checksum-fill
+        rules: "{{ mangle_rules }}"
 
     - name: Override the sources.list
       copy:
