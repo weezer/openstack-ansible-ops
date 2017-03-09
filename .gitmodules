@@ -1,0 +1,3 @@
+[submodule "multi-node-aio-playbook/library/ansible_iptables_raw"]
+	path = multi-node-aio-playbook/library/ansible_iptables_raw
+	url = https://github.com/Nordeus/ansible_iptables_raw.git
