@@ -49,20 +49,20 @@ run_osa: true
 
 # Iptables default_filter_rules
 default_filter_rules: |
-  INPUT -i br-dhcp -p udp --dport 67 -j ACCEPT
-  INPUT -i br-dhcp -p tcp --dport 67 -j ACCEPT
-  INPUT -i br-dhcp -p udp --dport 53 -j ACCEPT
-  INPUT -i br-dhcp -p tcp --dport 53 -j ACCEPT
-  FORWARD -i br-dhcp -j ACCEPT
-  FORWARD -o br-dhcp -j ACCEPT
+  -A INPUT -i br-dhcp -p udp --dport 67 -j ACCEPT
+  -A INPUT -i br-dhcp -p tcp --dport 67 -j ACCEPT
+  -A INPUT -i br-dhcp -p udp --dport 53 -j ACCEPT
+  -A INPUT -i br-dhcp -p tcp --dport 53 -j ACCEPT
+  -A FORWARD -i br-dhcp -j ACCEPT
+  -A FORWARD -o br-dhcp -j ACCEPT
 
 
 # iptables nat_rules
 nat_rules: |
-  POSTROUTING -s 10.0.0.0/24 ! -d 10.0.0.0/24 -j MASQUERADE
-  POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
+  -A POSTROUTING -s 10.0.0.0/24 ! -d 10.0.0.0/24 -j MASQUERADE
+  -A POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
 
 # iptables mangle_rules
 mangle_rules: |
-  POSTROUTING -s 10.0.0.0/24 -o br-dhcp -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill
-  POSTROUTING -p tcp -j CHECKSUM --checksum-fill
+  -A POSTROUTING -s 10.0.0.0/24 -o br-dhcp -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill
+  -A POSTROUTING -p tcp -j CHECKSUM --checksum-fill
