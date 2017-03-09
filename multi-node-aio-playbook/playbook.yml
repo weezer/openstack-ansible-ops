@@ -43,6 +43,7 @@
         - virtinst
         - virt-manager
         - vlan
+        - iptables-persistent
 
     - name: include interfaces.d files
       lineinfile:
@@ -90,7 +91,7 @@
 
     - name: Override the sources.list
       copy:
-        src: tmplates/sources.list.j2
+        src: templates/sources.list.j2
         dest: /etc/apt/sources.list
         owner: root
         group: root
