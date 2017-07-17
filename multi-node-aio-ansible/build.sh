@@ -23,9 +23,7 @@ source functions.rc
 source pre-setup.sh
 
 # Instruct the system do all of the require host setup
-ansible-playbook -v -i inventory setup-host.yml --extra-vars \
-          "vm_disk_device=${DEVICE_NAME} ssh_key=\"${SSHKEY}\" vm_net_iface=${DEFAULT_NETWORK}"
-
+ansible-playbook -v -i inventory setup-host.yml --extra-vars "ssh_key=\"${SSHKEY}\""
 
 SETUP_HOST=${SETUP_HOST:-true}
 [[ "${SETUP_HOST}" = true ]] && source setup-host.sh
