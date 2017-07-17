@@ -30,3 +30,7 @@ apt_packages :
     - virt-manager
     - vlan
     - python-pip
+
+network_base: "{{ lookup('env','__NETWORK_BASE__') }}"
+partition_host: "{{ lookup('env','PARTITION_HOST') }}"
+override_sources: "{{ lookup('env','OVERRIDE_SOURCES') }}"

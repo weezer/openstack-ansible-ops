@@ -14,26 +14,26 @@
 # module: atftpd_install/tasks/configure
 # description: Configure atftpd_install
 
-- name: Create group for application to run under
-  group:
-    name: "{{ atftp_group }}"
-    state: present
-
-- name: Create user for application to run under
-  user:
-    name: "{{ atftp_user }}"
-    group: "{{ atftp_group }}"
-    state: present
-
-- name: Atftp create directory and set permissions
-  file:
-    path: "{{ atftpd_path }}"
-    state: directory
-    owner: "{{ atftp_user }}"
-    group: "{{ atftp_group }}"
-
-- name: Atftpd set /etc/init.d/atftpd to not use xinetd and set our tftp path
-  template:
-    src: atftpd.j2
-    dest: /etc/default/atftpd
-  notify: atftpd_restart
+#- name: Create group for application to run under
+#  group:
+#    name: "{{ atftp_group }}"
+#    state: present
+#
+#- name: Create user for application to run under
+#  user:
+#    name: "{{ atftp_user }}"
+#    group: "{{ atftp_group }}"
+#    state: present
+#
+#- name: Atftp create directory and set permissions
+#  file:
+#    path: "{{ atftpd_path }}"
+#    state: directory
+#    owner: "{{ atftp_user }}"
+#    group: "{{ atftp_group }}"
+#
+#- name: Atftpd set /etc/init.d/atftpd to not use xinetd and set our tftp path
+#  template:
+#    src: atftpd.j2
+#    dest: /etc/default/atftpd
+#  notify: atftpd_restart

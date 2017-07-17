@@ -29,7 +29,7 @@
     src: kvm-bridges.j2
     dest: /etc/network/interfaces.d/kvm-bridges.cfg
     mode: 0644
-  with_items: NETWORK_BASE="{{ lookup('env','__NETWORK_BASE__') }}"
+  with_items: "{{ network_base }}"
 
 - name: Restart kvm network interfaces
   shell: |
@@ -99,7 +99,7 @@
   shell: |
     lsblk -brndo NAME,TYPE,FSTYPE,RO,SIZE | sort -n -r | head -n 1 | awk '{print $1;}'
   register: largest_unpartitioned_device
-  when: PARTITION_HOST
+  when: partition_host
 
 - name: Set DATA_DISK_DEVICE fact
   set_fact:
@@ -136,7 +136,7 @@
   copy:
     src: trusty-sources.list
     dest: /etc/apt/sources.list
-  when: OVERRIDE_SOURCES
+  when: override_sources
 
 
 - name: Allow apt repos to be UnAuthenticated
