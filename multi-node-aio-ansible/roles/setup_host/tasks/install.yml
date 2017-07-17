@@ -50,16 +50,12 @@
   iptables:
     chain: INPUT
     in_interface: br-dhcp
-    protocol: {{ item.protocol }}
-    destination_port: {{ item.ports }}
+    protocol: "{{ item[0] }}"
+    destination_port: "{{ item[1] }}"
     jump: ACCEPT
   with_nested:
-    protocol:
-      - "tcp"
-        "udp"
-    ports:
-      - "53"
-        "67"
+      - ["tcp", "udp"]
+      - ["53", "67"]
 
 - name: Add rules to the FORWARDING chain
   iptables:
@@ -84,7 +80,7 @@
   iptables:
     chain: POSTROUTING
     table: nat
-    out_interface: {{ ansible_default_ipv4.interface }}
+    out_interface: "{{ ansible_default_ipv4.interface }}"
     jump: MASQUERADE
 
 - name: Add rules from the mangle POSTROUTING chain
@@ -123,7 +119,7 @@
 - name:
   lineinfile:
     path: /etc/fstab
-    line: /dev/{{ DATA_DISK_DEVICE }}1 /var/lib/libvirt/images/ ext4 defaults 0 0
+    line: "/dev/{{ DATA_DISK_DEVICE }}1 /var/lib/libvirt/images/ ext4 defaults 0 0"
   when: largest_unpartitioned_device.stdout != ""
 
 - name: mount the file system to a path for VMs
@@ -142,4 +138,4 @@
 - name: Allow apt repos to be UnAuthenticated
   lineinfile:
     path: /etc/apt/apt.conf.d/00-nokey
-    line: APT { Get { AllowUnauthenticated "1"; }; };
+    line: "APT { Get { AllowUnauthenticated "1"; }; };"
