@@ -1,0 +1,145 @@
+---
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# module: atftpd_install/tasks/install
+# description: Install our required packages for atftpd_install
+
+- name: Install all required packages on host
+  apt:
+    name: "{{ apt_packages }}"
+    state: latest
+
+- name: Add source.*cfg into /etc/network.interfaces
+  lineinfile:
+    path: /etc/network/interfaces
+    line: source /etc/network/interfaces.d/*.cfg
+
+- name: Set up the network address.
+  template:
+    src: kvm-bridges.j2
+    dest: /etc/network/interfaces.d/kvm-bridges.cfg
+    mode: 0644
+  with_items: NETWORK_BASE="{{ lookup('env','__NETWORK_BASE__') }}"
+
+- name: Restart kvm network interfaces
+  shell: |
+    for i in $(awk '/iface/ {print $2}' /etc/network/interfaces.d/kvm-bridges.cfg); do
+      ifup $i
+    done
+
+- name: Clean up stale NTP processes. This is because of BUG https://bugs.launchpad.net/ubuntu/+source/ntp/+bug/1125726
+  shell: |
+    pkill lockfile-create || true
+
+- name: Set the forward rule
+  lineinfile:
+    path: /etc/sysctl.conf
+    line: sysctl -w net.ipv4.ip_forward=1
+
+- name: Add rules to the INPUT chain
+  iptables:
+    chain: INPUT
+    in_interface: br-dhcp
+    protocol: {{ item.protocol }}
+    destination_port: {{ item.ports }}
+    jump: ACCEPT
+  with_nested:
+    protocol:
+      - "tcp"
+        "udp"
+    ports:
+      - "53"
+        "67"
+
+- name: Add rules to the FORWARDING chain
+  iptables:
+    chain: FORWARDING
+    in_interface: br-dhcp
+    jump: ACCEPT
+
+- name: Add rules to the FORWARD chain
+  iptables:
+    chain: FORWARD
+    out_interface: br-dhcp
+    jump: ACCEPT
+
+- name: Add rules to the nat POSTROUTING chain
+  iptables:
+    chain: POSTROUTING
+    source: 10.0.0.0/24
+    destination: ! 10.0.0.0/24
+    jump: MASQUERADE
+
+- name: Pprovide internet connectivity to instances
+  iptables:
+    chain: POSTROUTING
+    table: nat
+    out_interface: {{ ansible_default_ipv4.interface }}
+    jump: MASQUERADE
+
+- name: Add rules from the mangle POSTROUTING chain
+  shell: |
+    iptables_filter_rule_add mangle 'POSTROUTING -s 10.0.0.0/24 -o br-dhcp -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill'
+
+- name: To ensure ssh checksum are always correct
+  shell: |
+    iptables_filter_rule_add mangle 'POSTROUTING -p tcp -j CHECKSUM --checksum-fill'
+
+- name: Register the largest unpartitioned device on system
+  shell: |
+    lsblk -brndo NAME,TYPE,FSTYPE,RO,SIZE | sort -n -r | head -n 1 | awk '{print $1;}'
+  register: largest_unpartitioned_device
+  when: PARTITION_HOST
+
+- name: Set DATA_DISK_DEVICE fact
+  set_fact:
+    DATA_DISK_DEVICE: largest_unpartitioned_device.stdout_lines
+  when: largest_unpartitioned_device.stdout != ""
+
+- name: Parted the disk
+  parted:
+    device: /dev/{{ DATA_DISK_DEVICE.stdout }}
+    label: gpt
+    align: optimal
+    part-type: kvm
+  when: largest_unpartitioned_device.stdout != ""
+
+- name: Create a ext4 filesystem on partition
+  filesystem:
+    fstype: ext4
+    dev: /dev/{{ DATA_DISK_DEVICE.stdout }}1
+  when: largest_unpartitioned_device.stdout != ""
+
+- name:
+  lineinfile:
+    path: /etc/fstab
+    line: /dev/{{ DATA_DISK_DEVICE }}1 /var/lib/libvirt/images/ ext4 defaults 0 0
+  when: largest_unpartitioned_device.stdout != ""
+
+- name: mount the file system to a path for VMs
+  mount:
+    state: mounted
+    path: /var/lib/libvirt/images
+  when: largest_unpartitioned_device.stdout != ""
+
+- name: Set the default OVERRIDE_SOURCES var
+  copy:
+    src: trusty-sources.list
+    dest: /etc/apt/sources.list
+  when: OVERRIDE_SOURCES
+
+
+- name: Allow apt repos to be UnAuthenticated
+  lineinfile:
+    path: /etc/apt/apt.conf.d/00-nokey
+    line: APT { Get { AllowUnauthenticated "1"; }; };
